@@ -18,7 +18,6 @@ def lossFunction(output, target, c_s, use_cuda):
     if c_s == 0:
         c_target = net.get_feature('ReLU', 5, 1, target).clone()
         c_output = net.get_feature('ReLU', 5, 1, output).clone()
-        print(c_target.size(1))
         if use_cuda:
             c_loss = ContentLoss(c_target, 1).cuda()
         else:

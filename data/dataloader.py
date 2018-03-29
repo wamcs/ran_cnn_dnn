@@ -9,7 +9,7 @@ test_path = './test/'
 
 # [-1,1]
 transform = transforms.Compose([
-        transforms.Resize(224),
+        transforms.Resize((224,224)),
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
         # transforms.Normalize(mean = [ 0.5, 0.5, 0.5],
