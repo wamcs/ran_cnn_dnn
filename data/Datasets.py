@@ -38,8 +38,10 @@ def make_dataset(dir):
                 if is_image_file(fname):
                     path = os.path.join(root, fname)
                     images.append(path)
-
-    return images
+    if len(images)>10000:
+        return images[:10000]
+    else:
+        return images
 
 
 class Dataset(data.Dataset):
@@ -55,7 +57,6 @@ class Dataset(data.Dataset):
         img = self.loader(path)
         if self.transform is not None:
             img = self.transform(img)
-            print(img)
         return img, img
 
     def __len__(self):
