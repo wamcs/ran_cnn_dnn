@@ -5,9 +5,8 @@ import torch.nn as nn
 
 # layer_num: the range of this value is 0-4
 class CDCN(nn.Module):
-    def __init__(self, layer_num=0):
+    def __init__(self, layer_num=0,mean = 0, std = 0.015):
         super(CDCN, self).__init__()
-        self.train_limit()
         self.layer_num = layer_num
         self.layers = nn.Sequential(
             # 224
@@ -30,11 +29,24 @@ class CDCN(nn.Module):
             nn.ConvTranspose2d(96, 3, kernel_size=8, stride=2, padding=1)
             # 224
         )
+        self.train_limit()
+        self.init_weight(mean,std)
 
     def forward(self, x):
         x = self.layers(x)
         # x = x.view(x.size(0), -1)
         return x
+
+    def init_weight(self,mean,std):
+        for i, m in enumerate(self.modules()):
+            if i < 2:
+                continue
+            if i >= self.layer_num+2:
+                break
+            if isinstance(m, nn.Conv2d):
+                m.weight.data.normal_(mean,std)
+                if m.bias is not None:
+                    m.bias.data.zero_()
 
     def train_limit(self):
         for i, item in enumerate(self.parameters()):

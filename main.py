@@ -89,10 +89,9 @@ def test(model, testloader, use_cuda, c_s,net):
 
 
 # c_s: if the value is 0, use content loss function, or use style loss function
-def init(net_type, c_s,net):
+def init(net_type, c_s,net,model):
     use_cuda = torch.cuda.is_available()
     print(use_cuda)
-    model = CDCN()
     if not os.path.exists(net_root):
         os.mkdir(path=net_root)
     path = net_root + net_type
@@ -128,8 +127,10 @@ def init(net_type, c_s,net):
 def main():
     net = VGG.modify_vgg()
     net.eval()
-    init("content", 0,net)
-    init("style", 1,net)
+    model1 = CDCN(4)
+    model2 = CDCN(4)
+    init("content", 0,net,model1)
+    init("style", 1,net,model2)
 
 
 if __name__ == '__main__':
