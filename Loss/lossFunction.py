@@ -8,13 +8,9 @@ import torch.nn.functional as func
 class ContentLoss(nn.Module):
     def __init__(self, target, weight):
         super(ContentLoss, self).__init__()
-        # we 'detach' the target content from the tree used
         self.target = target.detach() * weight
-        # to dynamically compute the gradient: this is a stated value,
-        # not a variable. Otherwise the forward method of the criterion
-        # will throw an error.
         self.weight = weight
-        # self.criterion = nn.MSELoss()
+        self.criterion = nn.MSELoss()
 
     def forward(self, input):
         input = input * self.weight
@@ -26,8 +22,6 @@ class ContentLoss(nn.Module):
         temp = nn.functional.pairwise_distance(input,target)
         temp = temp.view(batch,size)
         loss = torch.mean(temp)
-        # self.loss = loss
-        # self.output = input
         return loss
 
     # def backward(self, retain_graph=True):

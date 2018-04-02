@@ -1,6 +1,7 @@
 import torch.nn as nn
 import torch.utils.model_zoo as model_zoo
 
+# need to be abandoned,only use the feature of origin net to construct loss function
 model_urls = {
     'vgg11': 'https://download.pytorch.org/models/vgg11-bbd30ac9.pth',
     'vgg13': 'https://download.pytorch.org/models/vgg13-c768596a.pth',

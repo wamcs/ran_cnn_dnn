@@ -8,16 +8,16 @@ import torchvision.transforms as transforms
 
 log = False
 
-net = VGG.modify_vgg()
-net.eval()
+# net = VGG.modify_vgg()
+# net.eval()
 net_root = './netWeight/'
 
 
 # this two parameters are whole image with the same size
 def lossFunction(output, target, c_s, use_cuda,net):
     if c_s == 0:
-        c_target = net.get_feature('ReLU', 5, 1, target)
-        c_output = net.get_feature('ReLU', 5, 1, output)
+        c_target = target
+        c_output = output
         if use_cuda:
             c_loss = ContentLoss(c_target, 1).cuda()
         else:
@@ -25,8 +25,8 @@ def lossFunction(output, target, c_s, use_cuda,net):
         loss = c_loss(c_output)
         return loss
     else:
-        s_target = net.get_feature('ReLU', 3, 1, target)
-        s_output = net.get_feature('ReLU', 3, 1, output)
+        s_target = net.get_feature(target)
+        s_output = net.get_feature(output)
         if use_cuda:
             s_loss = StyleLoss(s_target, 1).cuda()
         else:
@@ -35,7 +35,7 @@ def lossFunction(output, target, c_s, use_cuda,net):
         return loss
 
 
-def train(model, dataloader, optimizer, epoch, n_epochs, use_cuda, c_s,net):
+def train(model, dataloader, optimizer, epoch, n_epochs, use_cuda, c_s):
     # the model of training
     if log:
         shower = transforms.ToPILImage()
@@ -45,7 +45,7 @@ def train(model, dataloader, optimizer, epoch, n_epochs, use_cuda, c_s,net):
     print('Epoch {}/{}'.format(epoch, n_epochs))
     for data in dataloader:
         x_train, y_train = data
-        #print(x_train.size())
+        print(x_train.size())
         if log:
             shower(x_train.squeeze()).convert('RGB').show()
         if use_cuda:
@@ -59,7 +59,7 @@ def train(model, dataloader, optimizer, epoch, n_epochs, use_cuda, c_s,net):
         if log:
             shower(outputs.data.squeeze()).convert('RGB').show()
 
-        loss = lossFunction(outputs, y_train, c_s, use_cuda,net)
+        loss = lossFunction(outputs, y_train, c_s, use_cuda,model)
         loss.backward()
 
         # optimize the weight of this net
@@ -70,9 +70,11 @@ def train(model, dataloader, optimizer, epoch, n_epochs, use_cuda, c_s,net):
     print("-" * 10)
 
 
-def test(model, testloader, use_cuda, c_s,net):
+def test(model, testloader, use_cuda, c_s):
     model.eval()
     test_loss = 0.0
+    if log:
+        shower = transforms.ToPILImage()
     print("-" * 10)
     print("test process")
 
@@ -82,8 +84,10 @@ def test(model, testloader, use_cuda, c_s,net):
             x_test, y_test = x_test.cuda(), y_test.cuda()
         x_test, y_test = Variable(x_test), Variable(y_test)
         output = model(x_test)
+        if log:
+            shower(output.data.cpu().squeeze()).convert('RGB').save('{}.png'.format(c_s))
 
-        test_loss += lossFunction(output, y_test, c_s, use_cuda,net).data[0]
+        test_loss += lossFunction(output, y_test, c_s, use_cuda,model).data[0]
     print("Loss {}".format(test_loss / len(testloader)))
     print("-" * 10)
 
@@ -105,9 +109,9 @@ def init(net_type, c_s,net,model):
     if os.path.exists(path):
         model.load_state_dict(torch.load(path))
     else:
-        optimizer = torch.optim.Adam(model.parameters())
+        optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad,model.parameters()))
         train_set = get_train_data()
-        n_epochs = 200
+        n_epochs = 400
         if log:
             n_epochs = 1
 
@@ -118,8 +122,7 @@ def init(net_type, c_s,net,model):
                   epoch=i,
                   n_epochs=n_epochs,
                   use_cuda=use_cuda,
-                  c_s=c_s,
-                  net=net)
+                  c_s=c_s)
         torch.save(model.state_dict(), path)
         print('successfully save weights')
 
@@ -131,6 +134,11 @@ def main():
     model2 = CDCN(4)
     init("content", 0,net,model1)
     init("style", 1,net,model2)
+    use_cuda = torch.cuda.is_available()
+    testloader = get_test_data()
+    test(model1,testloader,use_cuda,0,net)
+    test(model2,testloader,use_cuda,1,net)
+
 
 
 if __name__ == '__main__':

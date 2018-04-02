@@ -21,11 +21,11 @@ transform = transforms.Compose([
 def get_train_data(path=train_path):
     traindir = os.path.join(path, 'train')
     train = Dataset(traindir, transform=transform)
-    train_loader = torch.utils.data.DataLoader(train, batch_size=1, shuffle=True, num_workers=4)
+    train_loader = torch.utils.data.DataLoader(train, batch_size=20, shuffle=True, num_workers=4)
     return train_loader
 
 
-def get_test_data(path=train_path):
+def get_test_data(path=test_path):
     valdir = os.path.join(path, 'val')
     val = Dataset(valdir, transform=transform)
     val_loader = torch.utils.data.DataLoader(val, batch_size=1, shuffle=True, num_workers=4)

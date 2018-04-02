@@ -11,12 +11,12 @@ class CDCN(nn.Module):
         self.layers = nn.Sequential(
             # 224
             nn.Conv2d(3, 96, kernel_size=7, stride=2, padding=1),
-            # nn.ReLU(True),
+            nn.ReLU(True),
             # 110
             nn.AvgPool2d(kernel_size=3, stride=2, padding=1),
             # 55
             nn.Conv2d(96, 256, kernel_size=5, stride=2, padding=1),
-            # nn.ReLU(True),
+            nn.ReLU(True),
             # 27
             nn.AvgPool2d(kernel_size=3, stride=2, padding=1),
             # 14
@@ -53,3 +53,17 @@ class CDCN(nn.Module):
             if i >= self.layer_num:
                 break
             item.requires_grad = False
+
+    def get_feature(self, input):
+        i = 0
+        x = input
+        for layer in self.modules():
+            if isinstance(layer,nn.Conv2d):
+                x = layer(x)
+            if isinstance(layer, nn.ReLU):
+                i += 1
+                x = layer(x)
+                if i == 2:
+                   return x
+            if isinstance(layer,nn.AvgPool2d):
+                x = layer(x)
