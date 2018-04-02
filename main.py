@@ -136,8 +136,8 @@ def main():
     init("style", 1,net,model2)
     use_cuda = torch.cuda.is_available()
     testloader = get_test_data()
-    test(model1,testloader,use_cuda,0,net)
-    test(model2,testloader,use_cuda,1,net)
+    test(model1,testloader,use_cuda,0)
+    test(model2,testloader,use_cuda,1)
 
 
 
