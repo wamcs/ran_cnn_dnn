@@ -93,7 +93,7 @@ def test(model, testloader, use_cuda, c_s):
 
 
 # c_s: if the value is 0, use content loss function, or use style loss function
-def init(net_type, c_s,net,model):
+def init(net_type, c_s,model,batch):
     use_cuda = torch.cuda.is_available()
     print(use_cuda)
     if not os.path.exists(net_root):
@@ -101,17 +101,16 @@ def init(net_type, c_s,net,model):
     path = net_root + net_type
     if use_cuda:
         model.cuda()
-        net.cuda()
-        model = torch.nn.DataParallel(model, device_ids=[0])
+        #model = torch.nn.DataParallel(model, device_ids=[0])
         cudnn.benchmark = True
         path += '_cuda'
     print('begin')
     if os.path.exists(path):
         model.load_state_dict(torch.load(path))
     else:
-        optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad,model.parameters()))
-        train_set = get_train_data()
-        n_epochs = 400
+        optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad,model.parameters()),lr = 0.01)
+        train_set = get_train_data(batch=batch)
+        n_epochs = 100
         if log:
             n_epochs = 1
 
@@ -128,12 +127,13 @@ def init(net_type, c_s,net,model):
 
 
 def main():
-    net = VGG.modify_vgg()
-    net.eval()
-    model1 = CDCN(4)
-    model2 = CDCN(4)
-    init("content", 0,net,model1)
-    init("style", 1,net,model2)
+    #net = VGG.modify_vgg()
+    #net.eval()
+    os.environ["CUDA_VISIBLE_DEVICES"] = "2"
+    model1 = CDCN(6)
+    model2 = CDCN(6)
+    init("content", 0,model1,100)
+    init("style", 1,model2,20)
     use_cuda = torch.cuda.is_available()
     testloader = get_test_data()
     test(model1,testloader,use_cuda,0)

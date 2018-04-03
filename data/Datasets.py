@@ -38,8 +38,8 @@ def make_dataset(dir):
                 if is_image_file(fname):
                     path = os.path.join(root, fname)
                     images.append(path)
-    if len(images)>10000:
-        return images[:10000]
+    if len(images)>50000:
+        return images[:50000]
     else:
         return images
 

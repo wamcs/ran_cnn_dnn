@@ -29,8 +29,8 @@ class CDCN(nn.Module):
             nn.ConvTranspose2d(96, 3, kernel_size=8, stride=2, padding=1)
             # 224
         )
-        self.train_limit()
         self.init_weight(mean,std)
+        self.train_limit()
 
     def forward(self, x):
         x = self.layers(x)
@@ -50,7 +50,7 @@ class CDCN(nn.Module):
 
     def train_limit(self):
         for i, item in enumerate(self.parameters()):
-            if i >= self.layer_num:
+            if i >= self.layer_num-2:
                 break
             item.requires_grad = False
 
@@ -61,9 +61,11 @@ class CDCN(nn.Module):
             if isinstance(layer,nn.Conv2d):
                 x = layer(x)
             if isinstance(layer, nn.ReLU):
+                x = layer(x)
+            if isinstance(layer,nn.AvgPool2d):
+                x = layer(x)
+            if isinstance(layer,nn.ConvTranspose2d):
                 i += 1
                 x = layer(x)
                 if i == 2:
-                   return x
-            if isinstance(layer,nn.AvgPool2d):
-                x = layer(x)
+                    return x
