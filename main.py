@@ -71,7 +71,6 @@ def train(model, dataloader, optimizer, epoch, n_epochs, use_cuda, c_s):
 
 
 def test(model, testloader, use_cuda, c_s):
-    model.eval()
     test_loss = 0.0
     if log:
         shower = transforms.ToPILImage()
