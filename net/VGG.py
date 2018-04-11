@@ -69,7 +69,6 @@ class VGG(nn.Module):
                 index = 1
 
 
-
 def make_layers(cfg, batch_norm=False):
     layers = []
     in_channels = 3

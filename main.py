@@ -5,8 +5,9 @@ from torch.autograd import Variable
 import torch.backends.cudnn as cudnn
 from data.dataloader import *
 import torchvision.transforms as transforms
+import torch
 
-log = False
+log = True
 
 # net = VGG.modify_vgg()
 # net.eval()
@@ -16,8 +17,8 @@ net_root = './netWeight/'
 # this two parameters are whole image with the same size
 def lossFunction(output, target, c_s, use_cuda,net):
     if c_s == 0:
-        c_target = target
-        c_output = output
+        c_target = net.get_feature(target, 2)
+        c_output = net.get_feature(output, 2)
         if use_cuda:
             c_loss = ContentLoss(c_target, 1).cuda()
         else:
@@ -25,8 +26,8 @@ def lossFunction(output, target, c_s, use_cuda,net):
         loss = c_loss(c_output)
         return loss
     else:
-        s_target = net.get_feature(target)
-        s_output = net.get_feature(output)
+        s_target = net.get_feature(target, 1)
+        s_output = net.get_feature(output, 1)
         if use_cuda:
             s_loss = StyleLoss(s_target, 1).cuda()
         else:
@@ -37,8 +38,8 @@ def lossFunction(output, target, c_s, use_cuda,net):
 
 def train(model, dataloader, optimizer, epoch, n_epochs, use_cuda, c_s):
     # the model of training
-    if log:
-        shower = transforms.ToPILImage()
+    #if log:
+        #shower = transforms.ToPILImage()
     model.train()
     running_loss = 0.0
     print("-" * 10)
@@ -46,8 +47,8 @@ def train(model, dataloader, optimizer, epoch, n_epochs, use_cuda, c_s):
     for data in dataloader:
         x_train, y_train = data
         print(x_train.size())
-        if log:
-            shower(x_train.squeeze()).convert('RGB').show()
+        #if log:
+         #   shower(x_train.squeeze()).convert('RGB').show()
         if use_cuda:
             x_train, y_train = x_train.cuda(), y_train.cuda()
 
@@ -56,8 +57,8 @@ def train(model, dataloader, optimizer, epoch, n_epochs, use_cuda, c_s):
 
         optimizer.zero_grad()
         outputs = model(x_train)
-        if log:
-            shower(outputs.data.squeeze()).convert('RGB').show()
+        #if log:
+        #    shower(outputs.data.squeeze()).convert('RGB').show()
 
         loss = lossFunction(outputs, y_train, c_s, use_cuda,model)
         loss.backward()
@@ -92,7 +93,7 @@ def test(model, testloader, use_cuda, c_s):
 
 
 # c_s: if the value is 0, use content loss function, or use style loss function
-def init(net_type, c_s,model,batch):
+def init(net_type, c_s,model,epoch,batch):
     use_cuda = torch.cuda.is_available()
     print(use_cuda)
     if not os.path.exists(net_root):
@@ -107,11 +108,11 @@ def init(net_type, c_s,model,batch):
     if os.path.exists(path):
         model.load_state_dict(torch.load(path))
     else:
-        optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad,model.parameters()),lr = 0.01)
+        optimizer = torch.optim.Adam(model.DCNN.parameters())
         train_set = get_train_data(batch=batch)
-        n_epochs = 100
-        if log:
-            n_epochs = 1
+        n_epochs = epoch
+        #if log:
+            #n_epochs = 1
 
         for i in range(n_epochs):
             train(model=model,
@@ -129,10 +130,10 @@ def main():
     #net = VGG.modify_vgg()
     #net.eval()
     os.environ["CUDA_VISIBLE_DEVICES"] = "2"
-    model1 = CDCN(6)
-    model2 = CDCN(6)
-    init("content", 0,model1,100)
-    init("style", 1,model2,20)
+    model1 = CDCN(6,0,0.1)
+    model2 = CDCN(6,0,0.1)
+    init("content", 0,model1,100,200)
+    init("style", 1,model2,400,200)
     use_cuda = torch.cuda.is_available()
     testloader = get_test_data()
     test(model1,testloader,use_cuda,0)

@@ -41,7 +41,7 @@ class GramMatrix(nn.Module):
             G = torch.mm(features, features.t())  # compute the gram product
             # we 'normalize' the values of the gram matrix
             # by dividing by the number of element in each feature maps.
-            result.append(G.div(b * c * d))
+            result.append(G.view(1,-1))
 
         return torch.cat(tuple(result),dim=0)
 
